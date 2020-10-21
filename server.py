@@ -40,6 +40,61 @@ def abort_if_course_id_not_exist(course_id):
         abort(404, message=f"Course id: {course_id} does not exist")
 
 
+class StudentList(Resource):
+    def __init__(self):
+        self.reqparse = reqparse.RequestParser()
+        self.reqparse.add_argument(
+            "username",
+            type=str,
+            required=True,
+            location="json",
+        )
+        self.reqparse.add_argument("password", type=str, required=True, location="json")
+        super(StudentList, self).__init__()
+
+    def get(self):
+        students = StudentModel.query.all()
+        print(students)
+        return {"message": "get called"}
+
+    def post(self):
+        args = self.reqparse.parse_args()
+
+        user = StudentModel(username=args["username"], password=args["password"])
+
+        db.session.add(user)
+        db.session.commit()
+
+        return {"message": "posted"}
+
+
+class TeacherList(Resource):
+    def __init__(self):
+        self.reqparse = reqparse.RequestParser()
+        self.reqparse.add_argument(
+            "username",
+            type=str,
+            required=True,
+            location="json",
+        )
+        self.reqparse.add_argument("password", type=str, required=True, location="json")
+        super(TeacherList, self).__init__()
+
+    def get(self):
+        teachers = TeacherModel.query.all()
+        print(teachers)
+        return {"message": "get called"}
+
+    def post(self):
+        args = self.reqparse.parse_args()
+        user = TeacherModel(username=args["username"], password=args["password"])
+
+        db.session.add(user)
+        db.session.commit()
+
+        return {"message": "posted"}
+
+
 class CourseList(Resource):
     def __init__(self):
         self.reqparse = reqparse.RequestParser()
@@ -87,6 +142,8 @@ class Course(Resource):
         return courses, 204
 
 
+api.add_resource(StudentList, "/students/")
+api.add_resource(TeacherList, "/teachers/")
 api.add_resource(CourseList, "/courses/")
 api.add_resource(Course, "/courses/<int:course_id>")
 
