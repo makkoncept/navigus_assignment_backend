@@ -1,5 +1,4 @@
-from flask import Flask
-from flask_restful import Api, Resource, reqparse, abort
+from flask_restful import Api, Resource, reqparse, abort, fields, marshal
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -34,6 +33,13 @@ courses = {
     3: {"course_code": "CS101", "name": "Introduction to Computer Science"},
 }
 
+user_fields = {
+    "id": fields.Integer,
+    "username": fields.String,
+    "auth_level": fields.String,
+}
+
+
 
 def abort_if_course_id_not_exist(course_id):
     if course_id not in courses:
@@ -54,8 +60,7 @@ class StudentList(Resource):
 
     def get(self):
         students = StudentModel.query.all()
-        print(students)
-        return {"message": "get called"}
+        return marshal(students, user_fields)
 
     def post(self):
         args = self.reqparse.parse_args()
@@ -82,8 +87,7 @@ class TeacherList(Resource):
 
     def get(self):
         teachers = TeacherModel.query.all()
-        print(teachers)
-        return {"message": "get called"}
+        return marshal(teachers, user_fields)
 
     def post(self):
         args = self.reqparse.parse_args()
