@@ -1,8 +1,32 @@
 from flask import Flask
 from flask_restful import Api, Resource, reqparse, abort
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 api = Api(app)
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
+db = SQLAlchemy(app)
+
+
+class StudentModel(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(32), nullable=False, index=True)
+    password = db.Column(db.String(32), nullable=False)
+    auth_level = db.Column(db.String(10), default="user")
+
+    def __repr__(self):
+        return f"{self.id} | {self.username} | {self.auth_level}"
+
+
+class TeacherModel(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(32), index=True)
+    password = db.Column(db.String(32))
+    auth_level = db.Column(db.String(10), default="admin")
+
+    def __repr__(self):
+        return f"{self.id} | {self.username} | {self.auth_level}"
+
 
 courses = {
     1: {"course_code": "HS481", "name": "Application of psychology"},
