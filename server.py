@@ -68,8 +68,3 @@ api.add_resource(Course, "/courses/<int:course_id>")
 
 if __name__ == "__main__":
     app.run(debug=True)
-
-
-# add a basic skeleton for course Resource
-
-# used in memory dictionary for now
