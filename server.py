@@ -1,10 +1,15 @@
+from functools import wraps
+
+from flask import Flask, g
 from flask_cors import CORS
 from flask_restful import Api, Resource, reqparse, abort, fields, marshal
+from flask_httpauth import HTTPBasicAuth
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
 api = Api(app)
+auth = HTTPBasicAuth()
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
 db = SQLAlchemy(app)
 
@@ -42,6 +47,34 @@ user_fields = {
 }
 
 
+@auth.verify_password
+def verify_password(username, password):
+    user = StudentModel.query.filter_by(username=username).first()
+    print('inside')
+    print(user)
+    if not user:
+        user = TeacherModel.query.filter_by(username=username).first()
+        if not user or not user.password == password:
+            return False
+    elif not user.password == password:
+        return False
+
+    g.user = user
+    return True
+
+
+def permission_required(auth_level):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if g.user.auth_level != auth_level:
+                abort(403)
+            return f(*args, **kwargs)
+
+        return decorated_function
+
+    return decorator
+
 
 def abort_if_course_id_not_exist(course_id):
     if course_id not in courses:
@@ -49,6 +82,10 @@ def abort_if_course_id_not_exist(course_id):
 
 
 class StudentList(Resource):
+    method_decorators = {
+        "get": [auth.login_required],
+    }
+
     def __init__(self):
         self.reqparse = reqparse.RequestParser()
         self.reqparse.add_argument(
@@ -123,6 +160,12 @@ class CourseList(Resource):
 
 
 class Course(Resource):
+    method_decorators = {
+        "get": [auth.login_required],
+        "put": [permission_required("admin"), auth.login_required],
+        "delete": [permission_required("admin"), auth.login_required],
+    }
+
     def __init__(self):
         self.reqparse = reqparse.RequestParser()
         self.reqparse.add_argument("course_code", type=str, location="json")
