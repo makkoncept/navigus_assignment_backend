@@ -12,3 +12,16 @@ course_fields = {
     "course_code": fields.String,
     "name": fields.String,
 }
+
+"""
+Fields to serialize the complex response of question in quiz related routes
+"""
+option_fields = {
+    "text": fields.String,
+    "isTrue": fields.Boolean,
+}
+
+question_fields = {
+    "text": fields.String,
+    "options": fields.List(fields.Nested(option_fields)),
+}
