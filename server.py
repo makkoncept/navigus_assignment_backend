@@ -34,11 +34,13 @@ class TeacherModel(db.Model):
         return f"{self.id} | {self.username} | {self.auth_level}"
 
 
-courses = {
-    1: {"course_code": "HS481", "name": "Application of psychology"},
-    2: {"course_code": "PE482", "name": "Health Safety & Environment in Industry"},
-    3: {"course_code": "CS101", "name": "Introduction to Computer Science"},
-}
+class CourseModel(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    course_code = db.Column(db.String(10))
+    name = db.Column(db.String(100))
+
+    def __repr__(self):
+        return f"{self.id} | {self.course_code} | {self.name}"
 
 user_fields = {
     "id": fields.Integer,
@@ -46,6 +48,11 @@ user_fields = {
     "auth_level": fields.String,
 }
 
+course_fields = {
+    "id": fields.Integer,
+    "course_code": fields.String,
+    "name": fields.String,
+}
 
 @auth.verify_password
 def verify_password(username, password):
@@ -77,8 +84,10 @@ def permission_required(auth_level):
 
 
 def abort_if_course_id_not_exist(course_id):
-    if course_id not in courses:
+    course = CourseModel.query.filter_by(id=course_id).first()
+    if not course:
         abort(404, message=f"Course id: {course_id} does not exist")
+    return course
 
 
 class StudentList(Resource):
@@ -99,7 +108,7 @@ class StudentList(Resource):
 
     def get(self):
         students = StudentModel.query.all()
-        return marshal(students, user_fields)
+        return {'results': marshal(students, user_fields)}
 
     def post(self):
         args = self.reqparse.parse_args()
@@ -151,44 +160,57 @@ class CourseList(Resource):
         super(CourseList, self).__init__()
 
     def get(self):
-        return courses
+        courses = CourseModel.query.all()
+        return {'results': marshal(courses, course_fields)}
 
     def post(self):
         args = self.reqparse.parse_args()
-        courses[len(courses) + 1] = args
-        return courses, 201
+        print(args)
+
+        # TODO: handle if course code already exists
+
+        course = CourseModel(course_code=args["course_code"].lower(), name=args["name"].lower())
+
+        db.session.add(course)
+        db.session.commit()
+
+        return {'results': marshal(course, course_fields)}, 201
 
 
 class Course(Resource):
-    method_decorators = {
-        "get": [auth.login_required],
-        "put": [permission_required("admin"), auth.login_required],
-        "delete": [permission_required("admin"), auth.login_required],
-    }
+    # method_decorators = {
+    #     "get": [auth.login_required],
+    #     "put": [permission_required("admin"), auth.login_required],
+    #     "delete": [permission_required("admin"), auth.login_required],
+    # }
 
     def __init__(self):
         self.reqparse = reqparse.RequestParser()
         self.reqparse.add_argument("course_code", type=str, location="json")
-        self.reqparse.add_argument("name", type=int, location="json")
+        self.reqparse.add_argument("name", type=str, location="json")
         super(Course, self).__init__()
 
     def get(self, course_id):
-        abort_if_course_id_not_exist(course_id)
-        return courses[course_id]
+        course = abort_if_course_id_not_exist(course_id)
+        return {'results': marshal(course, course_fields)}
 
     def put(self, course_id):
-        abort_if_course_id_not_exist(course_id)
+        course = abort_if_course_id_not_exist(course_id)
         args = self.reqparse.parse_args()
+        print(args)
         for key, value in args.items():
             if value is not None:
-                courses[course_id][key] = value
-
-        return courses
+                setattr(course, key, value)
+        db.session.commit()
+        print(course)
+        return {'results': marshal(course, course_fields)}
 
     def delete(self, course_id):
-        abort_if_course_id_not_exist(course_id)
-        del courses[course_id]
-        return courses, 204
+        course = abort_if_course_id_not_exist(course_id)
+        db.session.delete(course)
+        db.session.commit()
+        courses = CourseModel.query.all()
+        return {'results': marshal(courses, course_fields)}, 204
 
 
 api.add_resource(StudentList, "/students/")
