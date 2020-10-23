@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 from flask_cors import CORS
 from flask_restful import Api
@@ -9,7 +10,10 @@ app = Flask(__name__)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
 api = Api(app)
 auth = HTTPBasicAuth()
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = (
+    os.environ.get("DATABASE_URL") or "sqlite:///database.db"
+)
+
 db = SQLAlchemy(app)
 
 
