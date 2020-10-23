@@ -48,13 +48,13 @@ class QuizList(Resource):
         for option in args["options"]:
             if (
                 "text" not in option
-                or "isTrue" not in option
+                or "is_true" not in option
                 or not isinstance(option["text"], str)
-                or not isinstance(option["isTrue"], bool)
+                or not isinstance(option["is_true"], bool)
             ):
                 abort(400)
             else:
-                db_option = OptionModel(text=option["text"], isTrue=option["isTrue"])
+                db_option = OptionModel(text=option["text"], is_true=option["is_true"])
                 question.options.append(db_option)
 
         db.session.add(question)

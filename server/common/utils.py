@@ -19,7 +19,7 @@ Fields to serialize the complex response of question in quiz related routes
 """
 option_fields = {
     "text": fields.String,
-    "isTrue": fields.Boolean,
+    "is_true": fields.Boolean,
 }
 
 question_fields = {

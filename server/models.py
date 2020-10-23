@@ -46,7 +46,7 @@ class QuestionModel(db.Model):
 class OptionModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     text = db.Column(db.String(250), nullable=False)
-    isTrue = db.Column(db.Boolean, nullable=False)
+    is_true = db.Column(db.Boolean, nullable=False)
     question_id = db.Column(
         db.Integer, db.ForeignKey("question_model.id"), nullable=False
     )
