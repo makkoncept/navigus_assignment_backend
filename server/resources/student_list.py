@@ -31,13 +31,12 @@ class StudentList(Resource):
 
         # checking if the student already exists
         if StudentModel.query.filter_by(username=args["username"]).first() is not None:
-            abort(409)  # conflict
+            abort(409, message="Student with this username already exists.")  # conflict
 
         # the role is not correct for the student
         if args["role"] != "student":
-            abort(400)  # bad request
+            abort(400, message="bad request")  # bad request
 
-        # the auth_level is set as "user" by default
         user = StudentModel(username=args["username"], password=args["password"])
 
         db.session.add(user)

@@ -29,13 +29,15 @@ class TeacherList(Resource):
 
         # checking if the teacher already exists
         if TeacherModel.query.filter_by(username=args["username"]).first() is not None:
-            abort(409)
+            abort(409, message="Teacher with this username already exists.")
 
         # the role is not correct for the teacher
         if args["role"] != "teacher":
-            abort(400)  # bad request
+            abort(400, message="bad request")  # bad request
 
-        # the auth_level is set as "admin" by default
+        # the default auth_level for teacher is set to 'admin' in db model.
+        # For students, the auth_level is 'user'. This field helps in doing role based
+        # authentication. Some resources are to be exposed to the admin only.
         user = TeacherModel(username=args["username"], password=args["password"])
 
         db.session.add(user)

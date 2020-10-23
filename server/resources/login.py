@@ -3,7 +3,6 @@ from flask_restful import Resource, reqparse, abort
 from server.models import TeacherModel, StudentModel
 
 
-
 class Login(Resource):
     # method_decorators = {
     #     "get": [auth.login_required],
@@ -21,15 +20,19 @@ class Login(Resource):
     def post(self):
         args = self.reqparse.parse_args()
         print(args)
-        user = ''
-        if args['role'] == 'student':
-            user = StudentModel.query.filter_by(username=args['username']).first()
-        elif args['role'] == 'teacher':
-            user = TeacherModel.query.filter_by(username=args['username']).first()
+        user = ""
+        if args["role"] == "student":
+            user = StudentModel.query.filter_by(username=args["username"]).first()
+        elif args["role"] == "teacher":
+            user = TeacherModel.query.filter_by(username=args["username"]).first()
         else:
-            abort(422) # not a valid role
+            # not a valid role
+            abort(422, message=f"{args['role']} is not a valid role")
 
-        if not user or user.password != args['password']:
-            abort(401) # unauthorized
+        if not user:
+            abort(404, message=f"{args['role']} with that username does not exist")
 
-        return {'results': args}
+        if user.password != args["password"]:
+            abort(401, message="Unauthorized: wrong password")  # unauthorized
+
+        return {"results": args}
