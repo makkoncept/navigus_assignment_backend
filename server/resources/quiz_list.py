@@ -43,7 +43,7 @@ class QuizList(Resource):
         if course is None:
             abort(404, message=f"course with course id = {course_id} does not exist")
 
-        question = QuestionModel(text=args["text"], course_id=course_id)
+        question = QuestionModel(text=args["text"], course_id=course_id, marks=200)
 
         for option in args["options"]:
             if (
@@ -52,7 +52,7 @@ class QuizList(Resource):
                 or not isinstance(option["text"], str)
                 or not isinstance(option["is_true"], bool)
             ):
-                abort(400)
+                abort(400, message="Bad request")
             else:
                 db_option = OptionModel(text=option["text"], is_true=option["is_true"])
                 question.options.append(db_option)
@@ -60,4 +60,4 @@ class QuizList(Resource):
         db.session.add(question)
         db.session.commit()
 
-        return {"results": marshal(question, question_fields)}
+        return {"results": marshal(question, question_fields)}, 201
