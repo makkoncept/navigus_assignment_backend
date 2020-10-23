@@ -15,6 +15,9 @@ class CourseList(Resource):
             location="json",
         )
         self.reqparse.add_argument("name", type=str, required=True, location="json")
+        self.reqparse.add_argument(
+            "passing_marks", type=int, required=True, location="json"
+        )
         super(CourseList, self).__init__()
 
     def get(self):
@@ -22,18 +25,19 @@ class CourseList(Resource):
         return {"results": marshal(courses, course_fields)}
 
     def post(self):
-        print("inside post")
         args = self.reqparse.parse_args()
-        print(args)
 
         if (
             CourseModel.query.filter_by(course_code=args["course_code"]).first()
             is not None
         ):
-            abort(409)  # conflict
+            # conflict
+            abort(409, message="Course with this course code already exists")
 
         course = CourseModel(
-            course_code=args["course_code"].lower(), name=args["name"].lower()
+            course_code=args["course_code"].lower(),
+            name=args["name"].lower(),
+            passing_marks=args["passing_marks"],
         )
 
         db.session.add(course)

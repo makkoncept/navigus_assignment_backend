@@ -11,6 +11,7 @@ course_fields = {
     "id": fields.Integer,
     "course_code": fields.String,
     "name": fields.String,
+    "passing_marks": fields.Integer,
 }
 
 """
